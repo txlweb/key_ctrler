@@ -679,15 +679,7 @@ int main(int argc, char* argv[]) {
         LOGW("Failed to lower CPU priority");
     }
     
-    // 2. 设置CPU亲和性为单核心（使用CPU0）
-    cpu_set_t cpu_set;
-    CPU_ZERO(&cpu_set);
-    CPU_SET(0, &cpu_set);
-    if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set) == 0) {
-        LOGI("CPU affinity set to core 0");
-    } else {
-        LOGW("Failed to set CPU affinity");
-    }
+    // 2. CPU亲和性设置将在加载配置文件后进行
     
     // 3. 设置内存策略优先使用swap
     // 确保内存不被锁定，允许系统将进程内存交换到swap
@@ -729,6 +721,59 @@ int main(int argc, char* argv[]) {
         LOGE("Failed to load config file");
         cleanup();
         return 1;
+    }
+    
+    // 设置CPU亲和性（在加载配置文件后）
+    std::string cpu_affinity_config = "0"; // 默认使用CPU0
+    auto cpu_it = g_config.find("cpu_affinity");
+    if (cpu_it != g_config.end()) {
+        cpu_affinity_config = cpu_it->second;
+        LOGI("Found CPU affinity config: %s", cpu_affinity_config.c_str());
+    } else {
+        LOGI("No CPU affinity config found, using default: CPU0");
+    }
+    
+    cpu_set_t cpu_set;
+    CPU_ZERO(&cpu_set);
+    
+    // 解析CPU亲和性配置
+    std::string cpu_str = cpu_affinity_config;
+    size_t pos = 0;
+    bool has_valid_cpu = false;
+    
+    while (pos < cpu_str.length()) {
+        size_t comma_pos = cpu_str.find(',', pos);
+        std::string cpu_num_str = cpu_str.substr(pos, comma_pos == std::string::npos ? std::string::npos : comma_pos - pos);
+        
+        // 去除空格
+        cpu_num_str.erase(0, cpu_num_str.find_first_not_of(" \t"));
+        cpu_num_str.erase(cpu_num_str.find_last_not_of(" \t") + 1);
+        
+        if (!cpu_num_str.empty()) {
+            int cpu_num = std::atoi(cpu_num_str.c_str());
+            if (cpu_num >= 0 && cpu_num < CPU_SETSIZE) {
+                CPU_SET(cpu_num, &cpu_set);
+                has_valid_cpu = true;
+                LOGI("Added CPU %d to affinity set", cpu_num);
+            } else {
+                LOGW("Invalid CPU number: %d", cpu_num);
+            }
+        }
+        
+        if (comma_pos == std::string::npos) break;
+        pos = comma_pos + 1;
+    }
+    
+    // 如果没有有效的CPU配置，默认使用CPU0
+    if (!has_valid_cpu) {
+        CPU_SET(0, &cpu_set);
+        LOGI("No valid CPU affinity config found, using default CPU 0");
+    }
+    
+    if (sched_setaffinity(0, sizeof(cpu_set), &cpu_set) == 0) {
+        LOGI("CPU affinity set successfully");
+    } else {
+        LOGW("Failed to set CPU affinity");
     }
     
     // 获取要监听的设备路径

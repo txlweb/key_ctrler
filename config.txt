@@ -29,6 +29,14 @@ double_click_interval=300
 # enable_log=0 禁用日志记录
 enable_log=0
 
+# CPU亲和性配置（可选）
+# 指定程序运行在哪些CPU核心上，用逗号分隔
+# 例如: cpu_affinity=0 表示只使用CPU0
+# 例如: cpu_affinity=0,1 表示使用CPU0和CPU1
+# 例如: cpu_affinity=2,3,4 表示使用CPU2、CPU3和CPU4
+# 如果不配置此项，默认使用CPU0
+cpu_affinity=0
+
 # 按键事件对应的脚本路径
 # 支持多种事件类型:
 # script_<keycode>=<script_path>                    # 兼容原有keydown/keyup事件
