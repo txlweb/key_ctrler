@@ -1,0 +1,44 @@
+# KCTRL 配置文件
+# 格式: key=value
+# 以#开头的行为注释
+
+# 要监听的输入设备路径
+# 支持多个设备，用|分隔符隔开
+# 单个设备示例:
+# device=/dev/input/event0
+# 多个设备示例:
+# device=/dev/input/event0|/dev/input/event1|/dev/input/event2
+
+device=/dev/input/event0
+
+# 设备名称（可选，用于日志显示）
+name=Power Button
+
+# 时间配置参数（毫秒）
+# 0-click_threshold ms视作点击
+click_threshold=500
+# 小于short_press_threshold ms认为短按
+short_press_threshold=1000
+# 大于long_press_threshold ms认为长按
+long_press_threshold=2000
+# 双击间隔时间
+double_click_interval=300
+
+# 日志开关配置
+# enable_log=1 启用日志记录
+# enable_log=0 禁用日志记录
+enable_log=0
+
+# 按键事件对应的脚本路径
+# 支持多种事件类型:
+# script_<keycode>=<script_path>                    # 兼容原有keydown/keyup事件
+# script_<keycode>_click=<script_path>              # 单击事件
+# script_<keycode>_double_click=<script_path>       # 双击事件
+# script_<keycode>_short_press=<script_path>        # 短按事件
+# script_<keycode>_long_press=<script_path>         # 长按事件
+
+# KEY735事件配置
+script_735_click=key735_click.sh          # 单击
+script_735_double_click=key735_double.sh  # 双击
+script_735_short_press=key735_short.sh    # 短按
+script_735_long_press=key735_long.sh      # 长按
